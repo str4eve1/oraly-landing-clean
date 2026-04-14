@@ -645,7 +645,7 @@ const HowItWorks = () => {
               num: "②",
               icon: <Camera className="text-primary w-5 h-5" />,
               title: "Lo staff genera la preview",
-              desc: "La segretaria o l'ASO — con il video corso incluso, pochi minuti — carica la foto e in 30 secondi la preview è pronta. Zero intervento del dentista.",
+              desc: "La segretaria o l'ASO carica la foto e in 30 secondi la preview è pronta. Zero intervento del dentista.",
               highlight: true,
             },
             {
@@ -1168,7 +1168,7 @@ const FAQ = () => {
     },
     {
       q: "Chi genera le preview? Devo farlo io?",
-      a: "No. Il protocollo è pensato per la segreteria o l'ASO. Il video corso incluso richiede pochi minuti. Da quel momento in poi lo staff lavora in autonomia — tu sei in poltrona."
+      a: "No. Il protocollo è pensato per la segreteria o l'ASO. È semplicissimo da usare — da quel momento lo staff lavora in autonomia, tu sei in poltrona."
     },
     {
       q: "Il 70% di accuratezza visiva non è troppo basso?",

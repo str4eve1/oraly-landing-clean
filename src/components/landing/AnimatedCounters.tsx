@@ -1,7 +1,7 @@
 import { useCountUp } from "@/hooks/useCountUp";
 
 const stats = [
-  { icon: "🦷", end: 1200, suffix: "+", label: "studi dentistici attivi" },
+  { icon: "🦷", end: 50, suffix: "+", label: "studi dentistici attivi" },
   { icon: "📈", end: 67, suffix: "%", prefix: "+", label: "tasso di accettazione medio" },
   { icon: "⚡", end: 10, suffix: " sec", label: "per ogni simulazione" },
   { icon: "💰", end: 4800, suffix: "", prefix: "€", label: "risparmiati in media ogni anno" },

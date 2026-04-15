@@ -16,7 +16,7 @@ export default function TopBar() {
           <span className="font-display font-bold text-foreground tracking-wide">SmileLive</span>
         </div>
         <p className="hidden md:block text-muted-foreground">
-          Già usato da <span className="text-foreground font-medium">1.200+ studi</span> dentistici italiani · Prova gratuita 14 giorni · Nessuna carta richiesta
+          Già usato da <span className="text-foreground font-medium">50+ studi</span> dentistici italiani · Prova gratuita 14 giorni · Nessuna carta richiesta
         </p>
         <a href="#pricing" className="font-display font-semibold text-primary hover:text-primary/80 transition-colors">
           Prova gratis →

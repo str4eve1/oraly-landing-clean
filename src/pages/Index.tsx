@@ -383,7 +383,7 @@ const Hero = () => {
               <div className="flex text-gold">
                 {[1,2,3,4,5].map((i) => <Star key={i} className="w-4 h-4 fill-current" />)}
               </div>
-              <span className="text-text-muted">Usato da oltre <strong className="text-text-main">340</strong> studi odontoiatrici in Italia</span>
+              <span className="text-text-muted">Usato da oltre <strong className="text-text-main">50</strong> studi odontoiatrici in Italia</span>
             </div>
           </motion.div>
         </motion.div>
@@ -454,7 +454,7 @@ const AnimatedNumbers = () => {
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="flex items-center gap-2">
             <Users className="w-6 h-6 text-gold" />
-            <div className="text-2xl font-headline font-bold text-text-main">340+</div>
+            <div className="text-2xl font-headline font-bold text-text-main">50+</div>
           </div>
           <div className="text-xs uppercase tracking-widest text-text-muted font-semibold">Studi Attivi in Italia</div>
         </div>
@@ -1225,7 +1225,7 @@ const Behind = () => {
         className="max-w-4xl mx-auto px-6 text-center"
       >
         <p className="text-2xl font-serif italic text-gold mb-10">
-          "Non vendo teoria. Ho costruito questo sistema lavorando fianco a fianco con studi dentistici reali, su problemi reali di consulenza."
+          "Non vendiamo teoria. Abbiamo costruito questo sistema lavorando fianco a fianco con studi dentistici reali, su problemi reali di consulenza."
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-2xl mx-auto mb-10">
           <div className="glass ghost-border rounded-xl p-4 text-center">

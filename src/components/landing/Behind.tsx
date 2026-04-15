@@ -10,7 +10,7 @@ export default function Behind() {
           Chi c'è dietro
         </h2>
         <p className="reveal stagger-1 text-secondary-foreground leading-relaxed mb-8 font-serif italic max-w-xl mx-auto">
-          "Non vendo teoria. Ho costruito questo sistema lavorando fianco a fianco con studi dentistici reali, su problemi reali di consulenza."
+          "Non vendiamo teoria. Abbiamo costruito questo sistema lavorando fianco a fianco con studi dentistici reali, su problemi reali di consulenza."
         </p>
         <div className="reveal stagger-2 grid grid-cols-2 gap-3 max-w-lg mx-auto">
           {[

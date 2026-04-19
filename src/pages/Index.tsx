@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import beforeImg from '../assets/WEBP/PRIMA (2).webp';
 import afterImg from '../assets/WEBP/DOPO (2).webp';
-import emotionalVideo from '../assets/Video Per SITO 1080p 3-HACDulAw_compressed.mp4';
+import emotionalVideo from '../assets/video per SITO 1080p FINITO.mp4';
 
 import logoBerlinesi from '../assets/LOGHI STUDI WEBP/BERLINESI 2 (1).png';
 import logoFerretti from '../assets/LOGHI STUDI WEBP/FERRETTI GIACOMO.png';

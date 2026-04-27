@@ -23,6 +23,8 @@ import imgFaccette from '../assets/WEBP/FACCETTE (1).jpeg';
 import imgImpianti from '../assets/WEBP/DOPO (2).webp'; // Temporaneo in attesa dell'immagine corretta
 import imgOrtodonzia from '../assets/WEBP/TERMOSTAMPATA-CrUanAGb.jpg';
 import logoFinale from '../assets/WEBP/SmileLive FINALE senza sfondo COLORI CORRETTI (1).webp';
+import { trackCta } from "@/lib/analytics";
+import { openCookieBanner } from "@/lib/consent";
 
 const EmotionalVideo = () => {
   const [isMuted, setIsMuted] = useState(true);
@@ -42,6 +44,11 @@ const EmotionalVideo = () => {
     }
   };
 
+  // Su touch (iOS in particolare) non agganciamo subito il drag: aspettiamo di
+  // capire se il gesto è orizzontale (drag dello slider) o verticale (scroll
+  // della pagina). Così evitiamo che lo slider rubi lo scroll verticale.
+  const pointerStartRef = useRef<{ x: number; y: number; id: number } | null>(null);
+
   const updateSliderPosition = (clientX: number) => {
     if (!sliderRef.current) return;
     const rect = sliderRef.current.getBoundingClientRect();
@@ -51,17 +58,47 @@ const EmotionalVideo = () => {
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('.alignment-controls')) return;
-    setIsDragging(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
-    updateSliderPosition(e.clientX);
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    if (e.pointerType === "mouse") {
+      setIsDragging(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+      updateSliderPosition(e.clientX);
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    updateSliderPosition(e.clientX);
+    if (isDragging) {
+      updateSliderPosition(e.clientX);
+      return;
+    }
+    const start = pointerStartRef.current;
+    if (!start || start.id !== e.pointerId) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+    if (adx < 8 && ady < 8) return;
+    if (adx > ady) {
+      setIsDragging(true);
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ }
+      updateSliderPosition(e.clientX);
+    } else {
+      pointerStartRef.current = null;
+    }
   };
 
-  const handlePointerUp = () => setIsDragging(false);
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const start = pointerStartRef.current;
+    if (!isDragging && start && start.id === e.pointerId && e.pointerType !== "mouse") {
+      const dx = Math.abs(e.clientX - start.x);
+      const dy = Math.abs(e.clientY - start.y);
+      if (dx < 8 && dy < 8) {
+        updateSliderPosition(e.clientX);
+      }
+    }
+    setIsDragging(false);
+    pointerStartRef.current = null;
+  };
 
   const handleSliderKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "ArrowLeft") {
@@ -242,7 +279,7 @@ const TopBar = () => {
       {/* Announcement bar */}
       <div className="bg-primary text-background text-xs md:text-sm font-bold text-center py-2 px-4 flex items-center justify-center gap-2">
         <span>Il software è gratis. Per sempre.</span>
-        <a href="#pricing" className="underline underline-offset-2 flex items-center gap-1 hover:opacity-80 transition-opacity">
+        <a href="https://app.smilelive.it/" onClick={() => trackCta("inizia_ora", "announcement_bar")} className="underline underline-offset-2 flex items-center gap-1 hover:opacity-80 transition-opacity">
           Inizia ora <ChevronRight className="w-3 h-3 inline" />
         </a>
       </div>
@@ -263,7 +300,7 @@ const TopBar = () => {
             <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
           </div>
           <div className="flex gap-4">
-            <a href="#pricing" className="bg-primary/10 text-primary border border-primary/30 px-6 py-2 rounded-full font-bold text-sm hover:bg-primary hover:text-background transition-all">
+            <a href="https://app.smilelive.it/" onClick={() => trackCta("inizia_gratis", "topbar_nav")} className="bg-primary/10 text-primary border border-primary/30 px-6 py-2 rounded-full font-bold text-sm hover:bg-primary hover:text-background transition-all">
               Inizia gratis
             </a>
           </div>
@@ -357,7 +394,8 @@ const Hero = () => {
 
           <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-6 pt-4">
             <motion.a
-              href="#pricing"
+              href="https://app.smilelive.it/"
+              onClick={() => trackCta("inizia_gratis", "hero")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-primary text-text-main font-medium px-8 py-4 rounded-full flex items-center gap-2 glow-cyan transition-shadow shadow-[0_0_20px_rgba(14,165,233,0.4)]"
@@ -763,7 +801,7 @@ const ROICalculator = () => {
                   <br/>Con una media di <strong className="text-text-main">€{ticket}</strong> per trattamento, incrementi il tuo fatturato mensile di <strong className="text-gold">€{extraRevenue.toLocaleString('it-IT')}</strong>.
                 </p>
                 <p className="text-sm text-text-muted mt-4">
-                  SmileLive Starter: <strong className="text-text-main">€39/mese</strong> annuale. Un solo trattamento in più lo ripaga in meno di un'ora di lavoro.
+                  SmileLive Standard: <strong className="text-text-main">€{Math.round(49 * 0.8)}/mese</strong> annuale. Un solo trattamento in più lo ripaga in meno di un'ora di lavoro.
                 </p>
               </div>
             </div>
@@ -889,7 +927,8 @@ const WhatYouGet = () => {
           </p>
           <div className="mt-6">
             <motion.a
-              href="#pricing"
+              href="https://app.smilelive.it/"
+              onClick={() => trackCta("inizia_gratis", "what_you_get")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-block bg-primary text-text-main font-headline font-bold uppercase tracking-wider px-10 py-4 rounded-full glow-cyan transition-all"
@@ -913,7 +952,7 @@ const Pricing = () => {
   return (
     <section id="pricing" className="py-32 bg-surface">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -921,17 +960,17 @@ const Pricing = () => {
           className="flex flex-col items-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-headline font-bold text-center mb-4">Scegli il tuo piano</h2>
-          <p className="text-xl text-text-muted text-center mb-4">Inizia gratis. Scala quando vuoi.</p>
-          <p className="text-base text-text-muted text-center max-w-2xl mb-8">Il software SmileLive è gratuito per sempre. Il primo mese ti regaliamo 10 foto e 3 video per testarlo con i tuoi pazienti reali — senza impegno, senza carta di credito.</p>
+          <p className="text-xl text-text-muted text-center mb-4">Software gratis per sempre. Paghi solo le preview che usi.</p>
+          <p className="text-base text-text-muted text-center max-w-2xl mb-8">Provi SmileLive con preview di prova in omaggio. Quando sei pronto, scegli un abbonamento per il prezzo migliore — oppure paghi solo quando ti servono.</p>
           <div className="flex items-center gap-4 bg-background ghost-border rounded-full p-2 relative">
-            <button 
-              onClick={() => setIsAnnual(false)} 
+            <button
+              onClick={() => setIsAnnual(false)}
               className={`px-6 py-2 rounded-full font-medium transition-all relative z-10 ${!isAnnual ? 'text-text-main' : 'text-text-muted hover:text-text-main'}`}
             >
               Mensile
             </button>
-            <button 
-              onClick={() => setIsAnnual(true)} 
+            <button
+              onClick={() => setIsAnnual(true)}
               className={`px-6 py-2 rounded-full font-medium transition-all flex items-center gap-2 relative z-10 ${isAnnual ? 'text-text-main' : 'text-text-muted hover:text-text-main'}`}
             >
               Annuale <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">-20%</span>
@@ -954,66 +993,86 @@ const Pricing = () => {
             <div className="text-4xl font-headline font-bold mb-1">€0<span className="text-sm text-text-muted font-normal">/mese</span></div>
             <div className="h-[1px] w-full bg-secondary/10 my-5"></div>
             <ul className="text-text-muted text-base space-y-3 mb-8 flex-grow text-left">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>Software completo</span></li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">10 foto + 3 video</strong> nel primo mese</span></li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">10 Promemoria WhatsApp</strong> nel primo mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>Software completo, sempre</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">3 foto + 3 video</strong> in omaggio</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>Pay-as-you-go: €7/foto · €4/video</span></li>
+              <li className="text-sm pt-2 border-t border-secondary/10 text-text-muted">Niente carta richiesta. Nessun impegno.</li>
             </ul>
-            <a href="#" className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Inizia gratis</a>
+            <a href="https://app.smilelive.it/" onClick={() => trackCta("inizia_gratis", "pricing_free")} className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Inizia gratis</a>
           </motion.div>
 
-          {/* Starter */}
+          {/* Standard */}
           <motion.div variants={fadeUp} className="glass ghost-border rounded-[2rem] p-8 flex flex-col items-center text-center">
-            <h3 className="text-xl font-medium mb-1">Starter</h3>
+            <h3 className="text-xl font-medium mb-1">Standard</h3>
             <p className="text-sm text-text-muted mb-4">Perfetto per iniziare</p>
             <div className="text-4xl font-headline font-bold mb-1">€{getPrice(49)}<span className="text-sm text-text-muted font-normal">/mese</span></div>
-            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(49-39)*12}/anno</div>}
+            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(49-Math.round(49*0.8))*12}/anno</div>}
             <div className="h-[1px] w-full bg-secondary/10 my-5"></div>
             <ul className="text-text-muted text-base space-y-3 mb-8 flex-grow text-left">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">30 foto</strong>/mese</span></li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">5 video</strong>/mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">10 foto</strong>/mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">10 video</strong>/mese</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">25 Promemoria</strong> WhatsApp/SMS</span></li>
-              <li className="text-sm pt-2 border-t border-secondary/10 text-text-muted">Extra: €2/foto · €4/video · €0,20/promemoria</li>
+              <li className="text-sm pt-2 border-t border-secondary/10 text-text-muted">Extra: €5/foto · €3/video · €0,20/promemoria</li>
             </ul>
-            <a href="#" className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Scegli Starter</a>
+            <a href="https://app.smilelive.it/" onClick={() => trackCta("scegli_standard", "pricing")} className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Scegli Standard</a>
           </motion.div>
 
-          {/* Premium */}
+          {/* Pro */}
           <motion.div variants={fadeUp} className="bg-surface-elevated ghost-border rounded-[2rem] p-8 flex flex-col items-center text-center relative glow-cyan-strong border-primary/40">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-background px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
               ⭐ Il più scelto
             </div>
             <div className="absolute inset-0 rounded-[2rem] border-2 border-primary/50 pointer-events-none"></div>
-            <h3 className="text-xl font-bold mb-1 text-primary mt-3">Premium</h3>
+            <h3 className="text-xl font-bold mb-1 text-primary mt-3">Pro</h3>
             <p className="text-sm text-text-muted mb-4">Per studi attivi</p>
-            <div className="text-5xl font-headline font-bold mb-1">€{getPrice(99)}<span className="text-sm text-text-muted font-normal">/mese</span></div>
-            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(99-79)*12}/anno</div>}
+            <div className="text-5xl font-headline font-bold mb-1">€{getPrice(89)}<span className="text-sm text-text-muted font-normal">/mese</span></div>
+            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(89-Math.round(89*0.8))*12}/anno</div>}
             <div className="h-[1px] w-full bg-secondary/10 my-5"></div>
             <ul className="text-text-main text-sm space-y-3 mb-8 flex-grow text-left">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-primary">100 foto</strong>/mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-primary">30 foto</strong>/mese</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-primary">20 video</strong>/mese</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-primary">50 Promemoria</strong> WhatsApp/SMS</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>Supporto prioritario</span></li>
-              <li className="text-sm text-text-muted pt-2 border-t border-secondary/20">Extra: €1/foto · €3/video · €0,19/promemoria</li>
+              <li className="text-sm text-text-muted pt-2 border-t border-secondary/20">Extra: €5/foto · €3/video · €0,19/promemoria</li>
             </ul>
-            <a href="#" className="w-full py-3 rounded-full bg-gradient-to-r from-primary to-secondary text-background hover:scale-105 transition-all font-bold text-sm shadow-[0_0_20px_rgba(14,165,233,0.4)] text-center">Scegli Premium</a>
+            <a href="https://app.smilelive.it/" onClick={() => trackCta("scegli_pro", "pricing")} className="w-full py-3 rounded-full bg-gradient-to-r from-primary to-secondary text-background hover:scale-105 transition-all font-bold text-sm shadow-[0_0_20px_rgba(14,165,233,0.4)] text-center">Scegli Pro</a>
           </motion.div>
 
           {/* Business */}
           <motion.div variants={fadeUp} className="glass ghost-border rounded-[2rem] p-8 flex flex-col items-center text-center">
             <h3 className="text-xl font-medium mb-1">Business</h3>
             <p className="text-sm text-text-muted mb-4">Per grandi studi</p>
-            <div className="text-4xl font-headline font-bold mb-1">€{getPrice(139)}<span className="text-sm text-text-muted font-normal">/mese</span></div>
-            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(139-111)*12}/anno</div>}
+            <div className="text-4xl font-headline font-bold mb-1">€{getPrice(149)}<span className="text-sm text-text-muted font-normal">/mese</span></div>
+            {isAnnual && <div className="text-sm text-primary font-semibold mb-1">Risparmi €{(149-Math.round(149*0.8))*12}/anno</div>}
             <div className="h-[1px] w-full bg-secondary/10 my-5"></div>
             <ul className="text-text-muted text-base space-y-3 mb-8 flex-grow text-left">
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">200 foto</strong>/mese</span></li>
-              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">40 video</strong>/mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">60 foto</strong>/mese</span></li>
+              <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">30 video</strong>/mese</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span><strong className="text-text-main">125 Promemoria</strong> WhatsApp/SMS</span></li>
               <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0 mt-0.5" /><span>Supporto prioritario</span></li>
-              <li className="text-sm pt-2 border-t border-secondary/10 text-text-muted">Extra: €0,50/foto · €2/video · €0,18/promemoria</li>
+              <li className="text-sm pt-2 border-t border-secondary/10 text-text-muted">Extra: €5/foto · €3/video · €0,18/promemoria</li>
             </ul>
-            <a href="#" className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Scegli Business</a>
+            <a href="https://app.smilelive.it/" onClick={() => trackCta("scegli_business", "pricing")} className="w-full py-3 rounded-full border border-secondary/30 hover:bg-secondary/5 transition-all font-medium text-sm text-center">Scegli Business</a>
           </motion.div>
+        </motion.div>
+
+        {/* Pay-as-you-go callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="mt-12 max-w-3xl mx-auto glass ghost-border rounded-3xl p-6 md:p-8 border-gold/20 bg-gold/5 flex flex-col md:flex-row items-center gap-6 text-center md:text-left"
+        >
+          <div className="w-14 h-14 shrink-0 rounded-full bg-gold/15 flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-gold" />
+          </div>
+          <div className="flex-1">
+            <p className="font-headline font-bold text-lg text-text-main mb-1">Senza abbonamento? Paghi solo quando usi.</p>
+            <p className="text-text-muted text-base leading-relaxed">
+              Con il piano <strong className="text-text-main">Free</strong> puoi acquistare singole preview a <strong className="text-text-main">€7/foto</strong> e <strong className="text-text-main">€4/video</strong>. Nessun canone fisso, niente contratti. Quando vedi che funziona, passi a un abbonamento e abbatti il prezzo unitario.
+            </p>
+          </div>
         </motion.div>
 
         <motion.p
@@ -1160,11 +1219,15 @@ const FAQ = () => {
   const faqs = [
     {
       q: "Il software è davvero gratis? Cosa c'è di nascosto?",
-      a: "Niente. Il software è gratis per sempre. Paghi le preview — foto e video — quando le usi. Come un taxi: paghi il tragitto, non il diritto di chiamarlo."
+      a: "Niente. Il software — schede paziente, preventivi digitali, promemoria, dashboard — è gratis per sempre. Paghi solo le preview AI quando le generi. Come un taxi: paghi il tragitto, non il diritto di chiamarlo."
     },
     {
-      q: "Il primo mese con 10 foto e 3 video basta per testarlo davvero?",
-      a: "Sì. Con 10 foto puoi fare 10 preview su pazienti reali questa settimana. Se anche solo 2 di loro firmano un trattamento che senza SmileLive non avrebbero firmato, hai già visto il valore. Il resto è scala."
+      q: "Meglio l'abbonamento o pagare solo quando uso?",
+      a: "Dipende dal volume. Con il piano Free paghi €7 a foto e €4 a video — perfetto per testare o per studi che fanno poche preview al mese. Sopra le ~7 preview/mese conviene lo Standard a €49: prezzo unitario quasi dimezzato (€5/foto · €3/video) e 25 promemoria inclusi. Pro e Business pagano lo stesso prezzo extra ma con quote incluse molto più alte."
+    },
+    {
+      q: "Quante preview di prova ho per testare SmileLive?",
+      a: "Ti regaliamo 3 foto e 3 video in omaggio quando crei l'account — senza carta, senza impegno. Bastano per mostrare lo strumento a pazienti reali e capire se per il tuo studio funziona. Se anche solo 1 firma un trattamento che senza SmileLive non avrebbe firmato, hai già visto il valore."
     },
     {
       q: "Chi genera le preview? Devo farlo io?",
@@ -1274,11 +1337,12 @@ const FinalCTA = () => {
           Ogni "ci penso" che senti oggi è un trattamento che potrebbe diventare un sì domani.
         </p>
         <p className="text-lg text-text-muted mb-10">
-          Il software è gratis. Le prime 10 preview sono incluse. <span className="text-text-main font-semibold">Il primo risultato potrebbe arrivare questa settimana.</span>
+          Il software è gratis. Le prime <strong className="text-text-main">3 foto + 3 video</strong> sono in omaggio. <span className="text-text-main font-semibold">Il primo risultato potrebbe arrivare questa settimana.</span>
         </p>
         <div>
           <motion.a
-            href="#pricing"
+            href="https://app.smilelive.it/"
+            onClick={() => trackCta("inizia_gratis", "final_cta")}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-primary text-text-main font-headline font-bold uppercase tracking-widest px-12 py-5 rounded-full glow-cyan-strong transition-all duration-300 text-lg flex items-center gap-3 mx-auto w-fit"
@@ -1306,9 +1370,13 @@ const Footer = () => (
         <img src={logoFinale} alt="SmileLive" className="h-12 w-auto" width="120" height="48" loading="lazy" />
       </div>
       <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-text-muted">
-        <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
         <span>·</span>
-        <a href="#" className="hover:text-primary transition-colors">Termini di Servizio</a>
+        <a href="/cookie-policy" className="hover:text-primary transition-colors">Cookie Policy</a>
+        <span>·</span>
+        <a href="/terms" className="hover:text-primary transition-colors">Termini di Servizio</a>
+        <span>·</span>
+        <button type="button" onClick={openCookieBanner} className="hover:text-primary transition-colors">Gestione cookie</button>
         <span>·</span>
         <a href="mailto:supporto@smilelive.it" className="hover:text-primary transition-colors">Contatti</a>
       </div>
@@ -1396,7 +1464,8 @@ const IntermediateCTA = () => (
       </h2>
       <p className="text-xl text-text-muted mb-8">Se gli mostri il risultato.</p>
       <motion.a
-        href="#pricing"
+        href="https://app.smilelive.it/"
+        onClick={() => trackCta("inizia_gratis", "intermediate_cta")}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="inline-flex items-center gap-2 bg-primary text-text-main font-headline font-bold uppercase tracking-wider px-10 py-4 rounded-full glow-cyan transition-all"

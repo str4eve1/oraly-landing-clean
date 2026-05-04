@@ -573,20 +573,20 @@ const ProblemSection = () => {
                 if (item.title === "Mock-up" || item.title === "Cerature") return null;
                 
                 return (
-                <div 
+                <div
                   key={i}
                   onMouseEnter={() => setActiveItem(i)}
-                  className={`group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-300 ${activeItem === i ? 'bg-secondary/10 border-secondary/30 scale-[1.02] shadow-lg' : 'bg-transparent border-transparent hover:bg-secondary/5'} border`}
+                  className={`group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-300 ${activeItem === i ? 'bg-secondary/10 border-secondary/30 scale-[1.02] shadow-lg' : 'bg-transparent border-transparent hover:bg-secondary/5'} border`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-colors ${activeItem === i ? 'bg-primary/20 text-primary' : 'bg-secondary/5 text-text-muted group-hover:bg-secondary/10'}`}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-xl transition-colors ${activeItem === i ? 'bg-primary/20 text-primary' : 'bg-secondary/5 text-text-muted group-hover:bg-secondary/10'}`}>
                       {item.icon}
                     </div>
                     <span className={`font-medium text-lg transition-colors ${activeItem === i ? 'text-text-main' : 'text-text-muted group-hover:text-text-main'}`}>
                       {item.title}
                     </span>
                   </div>
-                  <span className={`text-sm font-medium transition-colors text-text-muted ${activeItem === i ? 'text-primary' : ''}`}>
+                  <span className={`text-sm font-medium transition-colors text-text-muted pl-14 sm:pl-0 sm:text-right sm:flex-shrink-0 ${activeItem === i ? 'text-primary' : ''}`}>
                     {item.desc}
                   </span>
                 </div>
@@ -962,20 +962,19 @@ const Pricing = () => {
           <h2 className="text-4xl md:text-5xl font-headline font-bold text-center mb-4">Scegli il tuo piano</h2>
           <p className="text-xl text-text-muted text-center mb-4">Software gratis per sempre. Paghi solo le preview che usi.</p>
           <p className="text-base text-text-muted text-center max-w-2xl mb-8">Provi SmileLive con preview di prova in omaggio. Quando sei pronto, scegli un abbonamento per il prezzo migliore — oppure paghi solo quando ti servono.</p>
-          <div className="flex items-center gap-4 bg-background ghost-border rounded-full p-2 relative">
+          <div className="inline-flex items-center gap-1 bg-background ghost-border rounded-full p-1.5">
             <button
               onClick={() => setIsAnnual(false)}
-              className={`px-6 py-2 rounded-full font-medium transition-all relative z-10 ${!isAnnual ? 'text-text-main' : 'text-text-muted hover:text-text-main'}`}
+              className={`px-5 sm:px-6 py-2 rounded-full font-medium transition-colors duration-200 ${!isAnnual ? 'bg-surface-elevated shadow-md text-text-main' : 'text-text-muted hover:text-text-main'}`}
             >
               Mensile
             </button>
             <button
               onClick={() => setIsAnnual(true)}
-              className={`px-6 py-2 rounded-full font-medium transition-all flex items-center gap-2 relative z-10 ${isAnnual ? 'text-text-main' : 'text-text-muted hover:text-text-main'}`}
+              className={`px-5 sm:px-6 py-2 rounded-full font-medium transition-colors duration-200 flex items-center gap-2 ${isAnnual ? 'bg-surface-elevated shadow-md text-text-main' : 'text-text-muted hover:text-text-main'}`}
             >
               Annuale <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">-20%</span>
             </button>
-            <div className={`absolute top-2 bottom-2 w-[calc(50%-8px)] bg-surface-elevated shadow-lg rounded-full transition-all duration-300 ${isAnnual ? 'left-[calc(50%+4px)]' : 'left-2'}`}></div>
           </div>
         </motion.div>
 
